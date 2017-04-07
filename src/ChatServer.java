@@ -1,9 +1,13 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class ChatServer {
 	boolean started = false;
 	ServerSocket ss = null;
+	
+	
+	List<Client>clients=new ArrayList<>();
 
 	public static void main(String args[]) {
 		new ChatServer().start();
@@ -28,6 +32,7 @@ public class ChatServer {
 				Client c = new Client(s);
 				System.out.println("a client connected");
 				new Thread(c).start();
+				clients.add(c);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -44,6 +49,7 @@ public class ChatServer {
 	class Client implements Runnable {
 
 		private DataInputStream dis = null;
+		DataOutputStream dos=null;
 		private Socket s = null;
 		private boolean bConnect = false;
 
@@ -51,6 +57,7 @@ public class ChatServer {
 			this.s = s;
 			try {
 				dis = new DataInputStream(s.getInputStream());
+				dos = new DataOutputStream(s.getOutputStream());
 				bConnect = true;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -58,14 +65,24 @@ public class ChatServer {
 			}
 
 		}
+		
+		public void send(String str){
+			try {
+				dos.writeUTF(str);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
-		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			try {
 				while (bConnect) {
 					String str = dis.readUTF();
-					System.out.println(str);
+System.out.println(str);
+                    for(int i=0;i<clients.size();i++){
+                    	Client c=clients.get(i);
+                    	c.send(str);
+                    }
 				}
 			} catch (EOFException e) {
 				System.out.println("Client closed");
@@ -74,10 +91,9 @@ public class ChatServer {
 
 			} finally {
 				try {
-					if (dis != null)
-						dis.close();
-					if (s != null)
-						s.close();
+					if (dis != null)dis.close();
+					if (dos != null)dos.close();
+					if (s != null)s.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

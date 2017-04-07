@@ -5,10 +5,13 @@ import java.net.*;
 
 public class ChatClient extends Frame {
 
-	DataOutputStream dos=null;
+	DataOutputStream dos = null;
+	DataInputStream dis = null;
 	Socket s = null;
 	TextField tfTxt = new TextField();
 	TextArea taContent = new TextArea();
+
+	private boolean bConnected = false;
 
 	public static void main(String args[]) {
 		new ChatClient().launchFrame();
@@ -32,13 +35,17 @@ public class ChatClient extends Frame {
 		tfTxt.addActionListener(new TFListener());
 		this.setVisible(true);
 		connect();
+
+		new Thread(new RecvThread()).start();
 	}
 
 	public void connect() {
 		try {
 			s = new Socket("127.0.0.1", 8888);
 			dos = new DataOutputStream(s.getOutputStream());
+			dis = new DataInputStream(s.getInputStream());
 			System.out.println("succeed");
+			bConnected=true;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -46,39 +53,54 @@ public class ChatClient extends Frame {
 		}
 	}
 
-	
-	public void disconnect(){
+	public void disconnect() {
 		try {
 			s.close();
 			dos.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally{
+		} finally {
 			try {
 				s.close();
 				dos.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 		}
-		
+
 	}
-	
+
 	private class TFListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			String str = tfTxt.getText();
-			taContent.setText(str);
-			tfTxt.setText(""); 
-				try {
-					dos.writeUTF(str);
-					dos.flush();
-				} catch (IOException e) {
-					e.printStackTrace();
+			//taContent.setText(str);
+			tfTxt.setText("");
+			try {
+				dos.writeUTF(str);
+				dos.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private class RecvThread implements Runnable {
+
+		public void run() {
+
+			try {
+				while (bConnected) {
+					String str = dis.readUTF();
+					//System.out.println(str);
+					taContent.setText(taContent.getText()+ str +'\n');
 				}
-				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		}
 

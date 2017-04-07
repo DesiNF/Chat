@@ -5,7 +5,7 @@ import java.net.*;
 
 public class ChatClient extends Frame {
 
-	PrintWriter out;
+	DataOutputStream dos=null;
 	Socket s = null;
 	TextField tfTxt = new TextField();
 	TextArea taContent = new TextArea();
@@ -22,7 +22,6 @@ public class ChatClient extends Frame {
 		pack();
 		addWindowListener(new WindowAdapter() {
 
-			@Override
 			public void windowClosing(WindowEvent arg0) {
 				disconnect();
 				System.exit(0);
@@ -38,13 +37,11 @@ public class ChatClient extends Frame {
 	public void connect() {
 		try {
 			s = new Socket("127.0.0.1", 8888);
-			out = new PrintWriter(s.getOutputStream());
+			dos = new DataOutputStream(s.getOutputStream());
 			System.out.println("succeed");
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -53,10 +50,17 @@ public class ChatClient extends Frame {
 	public void disconnect(){
 		try {
 			s.close();
-			out.close();
+			dos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally{
+			try {
+				s.close();
+				dos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 		}
 		
 	}
@@ -67,9 +71,14 @@ public class ChatClient extends Frame {
 		public void actionPerformed(ActionEvent arg0) {
 			String str = tfTxt.getText();
 			taContent.setText(str);
-			tfTxt.setText("");
-				out.println(str);
-				out.flush();
+			tfTxt.setText(""); 
+				try {
+					dos.writeUTF(str);
+					dos.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 
 		}
 

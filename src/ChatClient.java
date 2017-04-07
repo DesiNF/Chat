@@ -1,10 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 
 public class ChatClient extends Frame {
 
+	PrintWriter out;
+	Socket s = null;
 	TextField tfTxt = new TextField();
 	TextArea taContent = new TextArea();
 
@@ -18,25 +20,26 @@ public class ChatClient extends Frame {
 		add(taContent, BorderLayout.NORTH);
 		add(tfTxt, BorderLayout.SOUTH);
 		pack();
-		addWindowListener(new WindowAdapter(){
+		addWindowListener(new WindowAdapter() {
 
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				// TODO Auto-generated method stub
+				disconnect();
 				System.exit(0);
 			}
-			
+
 		});
 
 		tfTxt.addActionListener(new TFListener());
 		this.setVisible(true);
 		connect();
 	}
-	
-	public void connect(){
+
+	public void connect() {
 		try {
-			Socket s=new Socket("127.0.0.1",8888);
-System.out.println("succeed");
+			s = new Socket("127.0.0.1", 8888);
+			out = new PrintWriter(s.getOutputStream());
+			System.out.println("succeed");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,15 +48,31 @@ System.out.println("succeed");
 			e.printStackTrace();
 		}
 	}
-	private class TFListener implements ActionListener{
+
+	
+	public void disconnect(){
+		try {
+			s.close();
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private class TFListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String s=tfTxt.getText();
-			taContent.setText(s);
+			String str = tfTxt.getText();
+			taContent.setText(str);
 			tfTxt.setText("");
+				out.println(str);
+				out.flush();
+
 		}
-		
+
 	}
 
 }

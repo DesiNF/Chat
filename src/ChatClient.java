@@ -11,6 +11,8 @@ public class ChatClient extends Frame {
 	TextField tfTxt = new TextField();
 	TextArea taContent = new TextArea();
 
+	// Thread tRecv=new Thread(new RecvThread());
+
 	private boolean bConnected = false;
 
 	public static void main(String args[]) {
@@ -45,7 +47,7 @@ public class ChatClient extends Frame {
 			dos = new DataOutputStream(s.getOutputStream());
 			dis = new DataInputStream(s.getInputStream());
 			System.out.println("succeed");
-			bConnected=true;
+			bConnected = true;
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -55,8 +57,10 @@ public class ChatClient extends Frame {
 
 	public void disconnect() {
 		try {
-			s.close();
+			bConnected = false;
+			dis.close();
 			dos.close();
+			s.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -76,7 +80,7 @@ public class ChatClient extends Frame {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			String str = tfTxt.getText();
-			//taContent.setText(str);
+			// taContent.setText(str);
 			tfTxt.setText("");
 			try {
 				dos.writeUTF(str);
@@ -94,9 +98,11 @@ public class ChatClient extends Frame {
 			try {
 				while (bConnected) {
 					String str = dis.readUTF();
-					//System.out.println(str);
-					taContent.setText(taContent.getText()+ str +'\n');
+					// System.out.println(str);
+					taContent.setText(taContent.getText() + str + '\n');
 				}
+			} catch (SocketException e) {
+				System.out.println("ÏµÍ³¹Ø±Õ");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
